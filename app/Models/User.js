@@ -21,6 +21,13 @@ class User extends Model {
 		})
 	}
 
+	/**
+	 * Ocula os campos definidos no retorno, das queries do DB
+	 */
+	static get hidden() {
+		return ['password']
+	}
+
 	static get traits() {
 		return [
 			'@provider:Adonis/Alc/HasRole',
@@ -41,6 +48,21 @@ class User extends Model {
 	tokens() {
 		return this.hasMany('App/Models/Token')
 	}
+
+	/**
+	 * Relacionamentos
+	 */
+	image() {
+		/**
+		 * PrimaryKey e Foreign Key já foram definidas em suas respectivos migrations
+		 */
+		return this.belongsTo('App/Models/Image')
+	}
+
+	coupons() {
+		return this.belongsToMany('App/Models/Coupon')
+	}
+
 }
 
 module.exports = User
