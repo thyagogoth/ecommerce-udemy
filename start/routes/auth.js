@@ -9,7 +9,7 @@ const Route = use('Route')
 Route.group(() => {
 
 	Route
-		.post('register', 'Authcontroller.register')
+		.post('register', 'AuthController.register')
 		.as('auth.register')
 
 	Route

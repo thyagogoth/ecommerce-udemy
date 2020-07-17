@@ -24,3 +24,13 @@ Route.get('/', () => {
  * Importação das rotas de autenticação
  */
 require('./auth')
+
+/**
+ * Importação das rotas de Admin
+ */
+require('./admin')
+
+/**
+ * Importação das rotas de Clientes
+ */
+require('./client')
