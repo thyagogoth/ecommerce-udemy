@@ -36,7 +36,7 @@ class ClientSeeder {
 		})
 
 		const adminRole = await Role.findBy('slug', 'administrator')
-		await user.roles().attach([role.id])
+		await user.roles().attach([adminRole.id])
 	}
 }
 
