@@ -40,7 +40,7 @@ Factory.blueprint('App/Models/Product', (faker) => {
 			type: 'pet'
 		}),
 		description: faker.sentence(),
-		price: fakes.floating({
+		price: faker.floating({
 			min: 0,
 			max: 1000,
 			fixed: 2

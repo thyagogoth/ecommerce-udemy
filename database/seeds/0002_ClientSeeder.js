@@ -15,7 +15,7 @@ const Factory = use('Factory')
 
 const Role = use('Role')
 
-const User = use('App/Models/user')
+const User = use('App/Models/User')
 
 class ClientSeeder {
 	async run() {
