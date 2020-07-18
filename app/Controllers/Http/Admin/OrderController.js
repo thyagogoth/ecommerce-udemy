@@ -4,90 +4,120 @@
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
 /** @typedef {import('@adonisjs/framework/src/View')} View */
 
+const Order = use('App/Models/Order')
+const Database = use('Database')
+const Service = use('App/Services/Order/OrderService')
+
 /**
  * Resourceful controller for interacting with orders
  */
 class OrderController {
-  /**
-   * Show a list of all orders.
-   * GET orders
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   * @param {View} ctx.view
-   */
-  async index ({ request, response, view }) {
-  }
+	/**
+	 * Show a list of all orders.
+	 * GET orders
+	 *
+	 * @param {object} ctx
+	 * @param {Request} ctx.request
+	 * @param {Response} ctx.response
+	 * @param {Object} ctx.pagination
+	 */
+	async index({ request, response, pagination }) {
+		const { status, id } = request.only(['status', 'id'])
 
-  /**
-   * Render a form to be used for creating a new order.
-   * GET orders/create
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   * @param {View} ctx.view
-   */
-  async create ({ request, response, view }) {
-  }
+		const query = Order.query()
 
-  /**
-   * Create/save a new order.
-   * POST orders
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   */
-  async store ({ request, response }) {
-  }
+		if (status && id) {
+			query.where('status', status)
+			query.orWhere('id', 'LIKE', `%${id}%`)
+		} else if (status) {
+			query.where('status', status)
+		} else if (id) {
+			query.where('id', 'LIKE', `%${id}%`)
+		}
 
-  /**
-   * Display a single order.
-   * GET orders/:id
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   * @param {View} ctx.view
-   */
-  async show ({ params, request, response, view }) {
-  }
+		const orders = await query
+			.orderBy('id', 'DESC')
+			.paginate(pagination.page, pagination.limit)
 
-  /**
-   * Render a form to update an existing order.
-   * GET orders/:id/edit
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   * @param {View} ctx.view
-   */
-  async edit ({ params, request, response, view }) {
-  }
+		return response.send(orders)
+	}
 
-  /**
-   * Update order details.
-   * PUT or PATCH orders/:id
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   */
-  async update ({ params, request, response }) {
-  }
+	/**
+	 * Create/save a new order.
+	 * POST orders
+	 *
+	 * @param {object} ctx
+	 * @param {Request} ctx.request
+	 * @param {Response} ctx.response
+	 */
+	async store({ request, response }) {
+		const trx = await Database.beginTransaction()
 
-  /**
-   * Delete a order with id.
-   * DELETE orders/:id
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   */
-  async destroy ({ params, request, response }) {
-  }
+		try {
+			const { user_id, items, status } = request.all()
+
+			let order = await Order.create({ user_id, status }, trx)
+			const service = new Service(order, trx)
+			if (items && items.length > 0) {
+				await service.syncItems(items)
+			}
+			await trx.commit()
+			return response.status(201).send(order)
+		} catch (error) {
+			await trx.rollback()
+			return response.status(400).send({ message: 'Não foi possível criar o pedido' })
+		}
+	}
+
+	/**
+	 * Display a single order.
+	 * GET orders/:id
+	 *
+	 * @param {object} ctx
+	 * @param {Request} ctx.request
+	 * @param {Response} ctx.response
+
+	 */
+	async show({ params: { id }, response }) {
+		const order = await Order.findOrFail(id)
+		return response.send(order)
+	}
+
+	/**
+	 * Update order details.
+	 * PUT or PATCH orders/:id
+	 *
+	 * @param {object} ctx
+	 * @param {Request} ctx.request
+	 * @param {Response} ctx.response
+	 */
+	async update({ params, request, response }) {
+	}
+
+	/**
+	 * Delete a order with id.
+	 * DELETE orders/:id
+	 *
+	 * @param {object} ctx
+	 * @param {Request} ctx.request
+	 * @param {Response} ctx.response
+	 */
+	async destroy({ params: { id }, response }) {
+		const order = await Order.findOrFail(id)
+		const trx = Database.beginTransaction()
+		try {
+			await order.items().delete(trx)
+			await order.coupons().delete(trx)
+
+			await order.delete()
+			await trx.commit()
+
+			return response.status(204).send()
+		} catch (error) {
+			await trx.rollback()
+			response.status(400).send({ message: "Não foi possível deletar este cupom" })
+		}
+	}
 }
 
 module.exports = OrderController
