@@ -14,6 +14,12 @@ Route.group(() => {
 	Route
 		.resource('categories', 'CategoryController')
 		.apiOnly()
+		.validator(
+			new Map([
+				[['categories.store'], ['Admin/StoreCategory']],
+				[['categories.update'], ['Admin/StoreCategory']]
+			])
+		)
 
 	/**
 	 * Products resource routes
@@ -38,6 +44,9 @@ Route.group(() => {
 	Route
 		.resource('orders', 'OrderController')
 		.apiOnly()
+		.validator(new Map(
+			[['orders.store'], ['Admin/StoreOrder']],
+		))
 
 	/**
 	 * Image resource routes
@@ -52,6 +61,10 @@ Route.group(() => {
 	Route
 		.resource('users', 'UserController')
 		.apiOnly()
+		.validator(new Map(
+			[['users.store', 'Admin/StoreUser']],
+			[['users.update', 'Admin/StoreUser']],
+		))
 
 })
 	.prefix('v1/admin')
