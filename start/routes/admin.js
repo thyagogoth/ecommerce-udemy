@@ -12,7 +12,7 @@ Route.group(() => {
 	 * Categories resource routes
 	 */
 	Route
-		.resource('categories','CategoryController')
+		.resource('categories', 'CategoryController')
 		.apiOnly()
 
 	/**
@@ -56,3 +56,7 @@ Route.group(() => {
 })
 	.prefix('v1/admin')
 	.namespace('Admin')
+	.middleware([
+		'auth',
+		'is:( admin || manager )'
+	])
