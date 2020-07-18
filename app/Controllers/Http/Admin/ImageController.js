@@ -82,7 +82,7 @@ class ImageController {
 			)
 			return response.status(201).send({ successes: images, errors: files.errors })
 		} catch (error) {
-			return response.status(400).send({ message: "Ocorreu uma falha na solicitração de upload" })
+			return response.status(400).send({ message: "Ocorreu uma falha na solicitação de upload" })
 		}
 	}
 
@@ -133,10 +133,9 @@ class ImageController {
 		try {
 			let filepath = Helpers.publicPath(`uploads/${image.path}`)
 
-			await fs.unlink(filepath, err => {
-				if (!err)
-					await image.delete()
-			})
+			fs.unlinkSync(filepath)
+			await image.delete()
+
 			return response.status(204).send()
 		} catch (error) {
 			return response.status(404).send({ message: 'Não foi possível excluir a imagem' })

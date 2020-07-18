@@ -153,8 +153,8 @@ class OrderController {
 
 			if (canAddDiscount && canApplyToOrder) {
 				discount = await Discount.findOrCreate({
-					order_id = order.id,
-					coupon_id = coupon.id
+					order_id: order.id,
+					coupon_id: coupon.id
 				})
 				info.message = 'Cupom aplicado com sucesso!'
 				info.success = true

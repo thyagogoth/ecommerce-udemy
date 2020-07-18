@@ -71,5 +71,5 @@ Route.group(() => {
 	.namespace('Admin')
 	.middleware([
 		'auth',
-		'is:( admin || manager )'
+		'is:( administrator || manager )'
 	])
