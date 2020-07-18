@@ -4,8 +4,10 @@
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
 /** @typedef {import('@adonisjs/framework/src/View')} View */
 
-const Order = use('App/Models/Order')
 const Database = use('Database')
+const Order = use('App/Models/Order')
+const Coupon = use('App/Models/Coupon')
+const Discount = use('App/Models/Discount')
 const Service = use('App/Services/Order/OrderService')
 
 /**
@@ -98,7 +100,7 @@ class OrderController {
 		try {
 			const { user_id, status } = request.all()
 			order.merge({ user_id, status })
-			const service = new Service(order,trx)
+			const service = new Service(order, trx)
 			await service.updateItems(items)
 			await order.save()
 			await trx.commit()
@@ -132,6 +134,45 @@ class OrderController {
 			await trx.rollback()
 			response.status(400).send({ message: "Não foi possível deletar este cupom" })
 		}
+	}
+
+	async applyDiscount({ params: { id }, request, response }) {
+		const { code } = request.all()
+		const coupon = await Coupon.findByOrFail('code', code.toUpperCase())
+		const order = await Order.findOrFail(id)
+
+		var discount,
+			info = {}
+
+		try {
+			const service = new Service(order)
+			const canAddDiscount = await service.canApplyDiscount(coupon)
+			const orderDiscounts = await order.coupons().getCount()
+
+			const canApplyToOrder = orderDiscounts < 1 || (orderDiscounts >= 1 && coupon.recursive)
+
+			if (canAddDiscount && canApplyToOrder) {
+				discount = await Discount.findOrCreate({
+					order_id = order.id,
+					coupon_id = coupon.id
+				})
+				info.message = 'Cupom aplicado com sucesso!'
+				info.success = true
+			} else {
+				info.message = 'Não é possível aplicar este cupom'
+				info.success = false
+			}
+			return response.send({ order, info })
+		} catch (error) {
+			return response.status(400).send({ message: 'Erro ao aplicar o cupom' })
+		}
+	}
+
+	async removeDiscpunt({ request, response }) {
+		const { discount_id } = request.all()
+		const discount = await Discount.findByOrFail(discount_id)
+		await discount.delete()
+		return response.status(204).send()
 	}
 }
 

@@ -37,6 +37,20 @@ class CouponService {
 	}
 
 	async canApplyDiscount(coupon) {
+
+		/**
+		 * Verificar a validade (data/período) do cupom
+		 */
+		const now = Date().getTime() // retorna a data em milisegundos
+		if (now >= coupon.valid_from.getTime() ||
+			(typeof coupon.valid_until == 'object' && coupon.valid_until.getTime() < now)
+		) {
+			//verifica se o cupom já entrou em validade
+			// verifica se há uma data de expiração
+			// se houver data de expiração verifica se o cupom expirou
+			return false
+		}
+
 		const couponProducts = await Database
 			.from('coupon_products')
 			.where('coupon_id', coupon.id)
@@ -100,7 +114,7 @@ class CouponService {
 		 */
 		if (isAssociatedToClients && Array.isArray(clientsMatch) && clientsMatch.length > 0) {
 			const match = couponClients.find(cliente => client === this.model.user_id)
-			if ( match ) {
+			if (match) {
 				return true
 			}
 		}
@@ -112,7 +126,7 @@ class CouponService {
 		 */
 		if (isAssociatedToClients && Array.isArray(clientsMatch) && clientsMatch.length > 0) {
 			const match = couponClients.find(cliente => client === this.model.user_id)
-			if ( match ) {
+			if (match) {
 				return true
 			}
 		}
